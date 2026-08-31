@@ -86,6 +86,9 @@ func Run(sourcePath, contractPath, outputPath string) (Manifest, error) {
 		DeleteOperations:         []string{},
 		BudgetExhaustionRecorded: true,
 	}
+	if err := validateManifest(manifest); err != nil {
+		return Manifest{}, err
+	}
 	if err := writeArtifacts(outputPath, manifest); err != nil {
 		return Manifest{}, err
 	}
@@ -353,11 +356,25 @@ func receiptFor(base Receipt, kind string, commitAuthority, authorizationGranted
 }
 
 func validateManifest(manifest Manifest) error {
+	if manifest.Schema != ManifestSchema || manifest.Version != "v1" || manifest.TransactionID != transactionID {
+		return fmt.Errorf("manifest identity is invalid")
+	}
 	if manifest.Summary != (Summary{Generated: 12, Closed: 3, Unknown: 3, Refuted: 6}) {
 		return fmt.Errorf("unexpected case summary")
 	}
-	if len(manifest.Cases) != FixedCases || manifest.ArtifactCount != 7 {
+	if len(manifest.Cases) != FixedCases || manifest.ArtifactCount != 7 || !sameStrings(manifest.ArtifactNames, artifactNames()) {
 		return fmt.Errorf("fixed case or artifact count mismatch")
+	}
+	if manifest.Denominator.CellCount != FixedCells || manifest.Denominator.Phases != (PhaseCounts{Prepare: 4, Authorize: 4, Commit: 4, VerifyOrAbort: 4}) || len(manifest.Denominator.Activities) != FixedCells {
+		return fmt.Errorf("fixed phase denominator mismatch")
+	}
+	if manifest.Authority.RepositoryWrites != 0 || manifest.Authority.LocalTestExecutions != 0 || manifest.Authority.CrossProjectRequiredGates != 0 || manifest.Authority.ProtectedRepositoryWrites != 0 || manifest.Authority.ProductMutationAuthorized {
+		return fmt.Errorf("manifest authority is not zero")
+	}
+	for _, item := range manifest.Cases {
+		if item.State == "UNKNOWN" && !item.Claim.HasUnknownTuple() {
+			return fmt.Errorf("unknown case %q has incomplete claim", item.ID)
+		}
 	}
 	return nil
 }
