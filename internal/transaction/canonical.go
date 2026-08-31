@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func DigestValue(value any) (string, error) {
@@ -82,7 +83,7 @@ func findRepoRoot() (string, bool) {
 
 func within(root, candidate string) bool {
 	rel, err := filepath.Rel(root, candidate)
-	return err == nil && rel != ".." && len(rel) >= 2 && rel[:2] != ".."+string(filepath.Separator)
+	return err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
 func copyStrings(values []string) []string {
