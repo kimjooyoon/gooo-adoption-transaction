@@ -1,16 +1,22 @@
 package transaction
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 )
 
 func TestRunProducesExactAdoptionCorpus(t *testing.T) {
 	root := filepath.Join("..", "..")
+	output, err := os.MkdirTemp("/tmp", "gooo-adoption-transaction-test-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.RemoveAll(output) })
 	manifest, err := Run(
 		filepath.Join(root, "examples", "adoption-transaction-v1", "transaction.gooo"),
 		filepath.Join(root, "contracts", "denominator-v1.json"),
-		t.TempDir(),
+		output,
 	)
 	if err != nil {
 		t.Fatal(err)
