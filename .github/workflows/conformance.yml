@@ -1,0 +1,87 @@
+name: Adoption transaction conformance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    env:
+      SUBJECT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SUBJECT_SHA }}
+      - uses: actions/setup-go@v6
+        with:
+          go-version: 1.27.0
+          cache: false
+      - name: Verify Go 1.27
+        run: test "$(go env GOVERSION)" = "go1.27.0"
+      - name: Verify formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=$(gofmt -l $(git ls-files '*.go'))
+          test -z "$files"
+      - name: Verify vet
+        run: go vet ./...
+      - name: Verify tests
+        run: go test ./...
+      - name: Verify build
+        run: go build -trimpath -o "$RUNNER_TEMP/gooo-adoption-transaction-bin" ./cmd/gooo-adoption-transaction
+      - name: Run generated adoption transaction evaluator
+        shell: bash
+        run: |
+          set -euo pipefail
+          bin="$RUNNER_TEMP/gooo-adoption-transaction-bin"
+          work="$RUNNER_TEMP/gooo-adoption-transaction-work"
+          mkdir -p "$work/first" "$work/replay"
+          before=$(git status --porcelain=v1 -z --untracked-files=all | sha256sum | awk '{print $1}')
+          "$bin" run --source examples/adoption-transaction-v1/transaction.gooo --contract contracts/denominator-v1.json --out "$work/first"
+          after=$(git status --porcelain=v1 -z --untracked-files=all | sha256sum | awk '{print $1}')
+          test "$before" = "$after"
+          "$bin" run --source examples/adoption-transaction-v1/transaction.gooo --contract contracts/denominator-v1.json --out "$work/replay"
+          cmp -s "$work/first/transaction-manifest.json" "$work/replay/transaction-manifest.json"
+          cmp -s "$work/first/prepare-receipt.json" "$work/replay/prepare-receipt.json"
+          cmp -s "$work/first/authorization-receipt.json" "$work/replay/authorization-receipt.json"
+          cmp -s "$work/first/commit-receipt.json" "$work/replay/commit-receipt.json"
+          cmp -s "$work/first/abort-receipt.json" "$work/replay/abort-receipt.json"
+          cmp -s "$work/first/replay-receipt.json" "$work/replay/replay-receipt.json"
+          cmp -s "$work/first/adoption-report.md" "$work/replay/adoption-report.md"
+          test "$(find "$work/first" -type f | wc -l | tr -d ' ')" = 7
+          jq -e '
+            .schema == "gooo/adoption-transaction/manifest/v1" and
+            .summary == {generated:12,closed:3,unknown:3,refuted:6} and
+            ([.cases[]|select(.state=="CLOSED")]|length) == 3 and
+            ([.cases[]|select(.state=="UNKNOWN")]|length) == 3 and
+            ([.cases[]|select(.state=="REFUTED")]|length) == 6 and
+            ([.cases[]|select(.state=="UNKNOWN")|(.claim.stage != "" and .claim.step != "" and .claim.reason != "" and .claim.unknown_class != "" and .claim.next_operation != "" and (.claim.blocked_by|length)>0)]|all) and
+            .authority.repository_writes == 0 and
+            .authority.local_test_executions == 0 and
+            .authority.cross_project_required_gates == 0 and
+            .denominator.cell_count == 16 and
+            .denominator.phases == {PREPARE:4,AUTHORIZE:4,COMMIT:4,VERIFY_OR_ABORT:4} and
+            .artifact_count == 7 and
+            (.release_digest|startswith("sha256:"))
+          ' "$work/first/transaction-manifest.json"
+          forbidden="$GITHUB_WORKSPACE/.gooo-adoption-transaction-forbidden-output"
+          if "$bin" run --source examples/adoption-transaction-v1/transaction.gooo --contract contracts/denominator-v1.json --out "$forbidden"; then
+            echo "repository-owned output was accepted" >&2
+            exit 1
+          fi
+          test ! -e "$forbidden"
+      - name: Publish human receipt
+        run: cat "$RUNNER_TEMP/gooo-adoption-transaction-work/first/adoption-report.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gooo-adoption-transaction-evidence-${{ github.run_id }}
+          path: ${{ runner.temp }}/gooo-adoption-transaction-work/first
+          if-no-files-found: error

@@ -1,0 +1,31 @@
+{
+  "schema": "gooo/adoption-transaction/denominator/v1",
+  "id": "adoption-transaction-v1",
+  "version": "v1",
+  "cell_count": 16,
+  "fixed": true,
+  "phases": {
+    "PREPARE": 4,
+    "AUTHORIZE": 4,
+    "COMMIT": 4,
+    "VERIFY_OR_ABORT": 4
+  },
+  "activities": [
+    {"ordinal":1,"id":"PREPARE_BASE","semantic_edge":"prepare:base->proposal","phase":"PREPARE"},
+    {"ordinal":2,"id":"PREPARE_PROPOSAL","semantic_edge":"prepare:proposal->digest","phase":"PREPARE"},
+    {"ordinal":3,"id":"PREPARE_EVALUATOR","semantic_edge":"prepare:evaluator->digest","phase":"PREPARE"},
+    {"ordinal":4,"id":"PREPARE_RECEIPT","semantic_edge":"prepare:receipt->authorization","phase":"PREPARE"},
+    {"ordinal":5,"id":"AUTHORIZE_IDENTITY","semantic_edge":"authorize:identity->actor","phase":"AUTHORIZE"},
+    {"ordinal":6,"id":"AUTHORIZE_SCOPE","semantic_edge":"authorize:paths->exact-tuple","phase":"AUTHORIZE"},
+    {"ordinal":7,"id":"AUTHORIZE_DIGESTS","semantic_edge":"authorize:digests->proposal","phase":"AUTHORIZE"},
+    {"ordinal":8,"id":"AUTHORIZE_BUDGET","semantic_edge":"authorize:budget->commit","phase":"AUTHORIZE"},
+    {"ordinal":9,"id":"COMMIT_INPUT","semantic_edge":"commit:authorized->input","phase":"COMMIT"},
+    {"ordinal":10,"id":"COMMIT_APPLY","semantic_edge":"commit:apply->fixture","phase":"COMMIT"},
+    {"ordinal":11,"id":"COMMIT_EXPECTED_POST","semantic_edge":"commit:expected-post->verify","phase":"COMMIT"},
+    {"ordinal":12,"id":"COMMIT_SINGLE_USE","semantic_edge":"commit:budget->single-use","phase":"COMMIT"},
+    {"ordinal":13,"id":"VERIFY_STATE","semantic_edge":"verify:post-state->result","phase":"VERIFY_OR_ABORT"},
+    {"ordinal":14,"id":"VERIFY_DIGEST","semantic_edge":"verify:digest->result","phase":"VERIFY_OR_ABORT"},
+    {"ordinal":15,"id":"ABORT_EXPLICIT","semantic_edge":"abort:explicit->terminal","phase":"VERIFY_OR_ABORT"},
+    {"ordinal":16,"id":"VERIFY_REPLAY","semantic_edge":"verify:replay->determinism","phase":"VERIFY_OR_ABORT"}
+  ]
+}

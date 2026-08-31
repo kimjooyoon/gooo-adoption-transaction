@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kimjooyoon/gooo-adoption-transaction/schemas/adoption-transaction-v1.schema.json",
+  "title": "Gooo adoption transaction v1",
+  "type": "object",
+  "required": ["schema", "summary", "cases", "authority", "release_digest"],
+  "properties": {
+    "schema": {"const": "gooo/adoption-transaction/manifest/v1"},
+    "summary": {"type":"object","required":["generated","closed","unknown","refuted"],"additionalProperties":false},
+    "cases": {"type":"array","minItems":12,"maxItems":12},
+    "authority": {"type":"object","required":["repository_writes","local_test_executions","cross_project_required_gates"]},
+    "release_digest": {"type":"string","pattern":"^sha256:"}
+  },
+  "additionalProperties": true
+}

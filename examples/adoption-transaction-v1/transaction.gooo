@@ -1,0 +1,23 @@
+gooo adoption_transaction v1
+
+denominator id=adoption-transaction-v1 cell_count=16
+authority repository_writes=0 local_test_executions=0 cross_project_required_gates=0
+precedence REFUTED>UNKNOWN>CLOSED
+unknown_fields stage,step,reason,unknown_class,next_operation,blocked_by
+
+activity ordinal=1 id=PREPARE_BASE edge=prepare:base->proposal phase=PREPARE
+activity ordinal=2 id=PREPARE_PROPOSAL edge=prepare:proposal->digest phase=PREPARE
+activity ordinal=3 id=PREPARE_EVALUATOR edge=prepare:evaluator->digest phase=PREPARE
+activity ordinal=4 id=PREPARE_RECEIPT edge=prepare:receipt->authorization phase=PREPARE
+activity ordinal=5 id=AUTHORIZE_IDENTITY edge=authorize:identity->actor phase=AUTHORIZE
+activity ordinal=6 id=AUTHORIZE_SCOPE edge=authorize:paths->exact-tuple phase=AUTHORIZE
+activity ordinal=7 id=AUTHORIZE_DIGESTS edge=authorize:digests->proposal phase=AUTHORIZE
+activity ordinal=8 id=AUTHORIZE_BUDGET edge=authorize:budget->commit phase=AUTHORIZE
+activity ordinal=9 id=COMMIT_INPUT edge=commit:authorized->input phase=COMMIT
+activity ordinal=10 id=COMMIT_APPLY edge=commit:apply->fixture phase=COMMIT
+activity ordinal=11 id=COMMIT_EXPECTED_POST edge=commit:expected-post->verify phase=COMMIT
+activity ordinal=12 id=COMMIT_SINGLE_USE edge=commit:budget->single-use phase=COMMIT
+activity ordinal=13 id=VERIFY_STATE edge=verify:post-state->result phase=VERIFY_OR_ABORT
+activity ordinal=14 id=VERIFY_DIGEST edge=verify:digest->result phase=VERIFY_OR_ABORT
+activity ordinal=15 id=ABORT_EXPLICIT edge=abort:explicit->terminal phase=VERIFY_OR_ABORT
+activity ordinal=16 id=VERIFY_REPLAY edge=verify:replay->determinism phase=VERIFY_OR_ABORT

@@ -1,0 +1,10 @@
+{
+  "schema": "gooo/adoption-transaction/ownership-receipt/v1",
+  "owner_scope": "gooo-adoption-transaction only",
+  "protected_input_repositories": [
+    "meta-ontology-go",
+    "gooo-semantic-mutation-lab"
+  ],
+  "single_recorder": true,
+  "unexpected_change_policy": "stop and report exact paths"
+}
