@@ -17,16 +17,16 @@ const (
 )
 
 type seed struct {
-	sourceDigest          string
-	contractDigest        string
-	evaluatorDigest       string
-	proposalDigest        string
-	releaseDigest         string
-	beforeDigest          string
-	afterDigest           string
-	base                  BaseTuple
-	authorizedPaths       []string
-	proposal              Proposal
+	sourceDigest    string
+	contractDigest  string
+	evaluatorDigest string
+	proposalDigest  string
+	releaseDigest   string
+	beforeDigest    string
+	afterDigest     string
+	base            BaseTuple
+	authorizedPaths []string
+	proposal        Proposal
 }
 
 type fixtureState struct {
@@ -240,7 +240,7 @@ func newCase(s seed, id, name, state, decision string) CaseResult {
 		Proposer: proposer, Authorizer: authorizer,
 		Base: s.base, AuthorizedChangedPaths: copyStrings(s.authorizedPaths),
 		ProposedChangedPaths: copyStrings(s.authorizedPaths),
-		ProposalDigest: s.proposalDigest, EvaluatorDigest: s.evaluatorDigest,
+		ProposalDigest:       s.proposalDigest, EvaluatorDigest: s.evaluatorDigest,
 		ExpectedPostStateDigest: s.afterDigest, Budget: Budget{Limit: 1},
 		Claim: Claim{State: state, BlockedBy: []string{}}, Metrics: Metrics{WallMS: 1, PeakRSSKiB: 64},
 	}
@@ -328,11 +328,11 @@ func writeArtifacts(outputPath string, manifest Manifest) error {
 		Authority: manifest.Authority,
 	}
 	receipts := map[string]Receipt{
-		"prepare-receipt.json":      receiptFor(common, "PREPARE", false, false, false, []string{"CASE-01-VALID-COMMIT", "CASE-02-DETERMINISTIC-REPLAY", "CASE-03-EXPLICIT-ABORT"}),
+		"prepare-receipt.json":       receiptFor(common, "PREPARE", false, false, false, []string{"CASE-01-VALID-COMMIT", "CASE-02-DETERMINISTIC-REPLAY", "CASE-03-EXPLICIT-ABORT"}),
 		"authorization-receipt.json": receiptFor(common, "AUTHORIZE", false, true, false, []string{"CASE-01-VALID-COMMIT", "CASE-02-DETERMINISTIC-REPLAY", "CASE-03-EXPLICIT-ABORT"}),
-		"commit-receipt.json":       receiptFor(common, "COMMIT", true, true, false, []string{"CASE-01-VALID-COMMIT", "CASE-02-DETERMINISTIC-REPLAY"}),
-		"abort-receipt.json":        receiptFor(common, "ABORT", false, false, false, []string{"CASE-03-EXPLICIT-ABORT"}),
-		"replay-receipt.json":       receiptFor(common, "REPLAY", true, true, false, []string{"CASE-02-DETERMINISTIC-REPLAY", "CASE-06-EXHAUSTED-BUDGET-REPLAY"}),
+		"commit-receipt.json":        receiptFor(common, "COMMIT", true, true, false, []string{"CASE-01-VALID-COMMIT", "CASE-02-DETERMINISTIC-REPLAY"}),
+		"abort-receipt.json":         receiptFor(common, "ABORT", false, false, false, []string{"CASE-03-EXPLICIT-ABORT"}),
+		"replay-receipt.json":        receiptFor(common, "REPLAY", true, true, false, []string{"CASE-02-DETERMINISTIC-REPLAY", "CASE-06-EXHAUSTED-BUDGET-REPLAY"}),
 	}
 	for name, receipt := range receipts {
 		if err := writeJSON(filepath.Join(abs, name), receipt); err != nil {
